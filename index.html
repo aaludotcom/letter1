@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Locked with Love</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Great+Vibes&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dark-red: #4a0000;
+            --crimson: #a4031f; 
+            --heart-gradient: radial-gradient(circle at 35% 35%, #ff0a33 0%, #a4031f 45%, #4a0000 100%);
+            --parchment: #fdf5e6;
+        }
+
+        body {
+            background-color: #0d0000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .falling-item {
+            position: absolute;
+            user-select: none;
+            pointer-events: none;
+            z-index: 1;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+
+        #stage-heart { text-align: center; z-index: 10; }
+        .heart-wrapper { position: relative; width: 320px; height: 280px; cursor: pointer; }
+        .heart-main::before, .heart-main::after {
+            content: ""; position: absolute; left: 160px; top: 0;
+            width: 160px; height: 260px; background: var(--heart-gradient);
+            border-radius: 160px 160px 0 0; transform: rotate(-45deg);
+            transform-origin: 0 100%; box-shadow: inset -10px 10px 20px rgba(0,0,0,0.5);
+        }
+        .heart-main::after { left: 0; transform: rotate(45deg); transform-origin: 100% 100%; box-shadow: inset 10px 10px 20px rgba(0,0,0,0.5); }
+        .content-overlay { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); z-index: 20; text-align: center; width: 220px; display: none; }
+        input { width: 100%; padding: 12px; border-radius: 30px; background: rgba(0, 0, 0, 0.7); color: white; text-align: center; border: 2px solid var(--crimson); outline: none; }
+        .pulse { animation: heartbeat 1.5s infinite ease-in-out; }
+        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+        #stage-letter {
+            display: none;
+            opacity: 0;
+            z-index: 50;
+            cursor: pointer;
+            padding: 10px;
+        }
+
+        .paper {
+            background-color: var(--parchment);
+            background-image: url("https://www.transparenttextures.com/patterns/handmade-paper.png");
+            width: 90vw;
+            max-width: 450px;
+            height: 75vh; 
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.9);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .corner-heart { position: absolute; top: 20px; left: 20px; color: var(--crimson); font-size: 20px; z-index: 55; }
+
+        .border-frame {
+            border: 4px double var(--dark-red);
+            padding: 15px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            overflow: hidden; 
+        }
+
+        .scroll-content {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 0 10px;
+            scrollbar-width: none; 
+        }
+
+        .scroll-content::-webkit-scrollbar { display: none; }
+
+        .letter-content { 
+            font-family: 'Great Vibes', cursive;
+            font-size: 1.6rem; 
+            line-height: 1.6; 
+            color: #2b0000;
+            opacity: 0;
+            transform: translateY(20px);
+            text-align: center;
+        }
+
+        #signature {
+            font-family: 'Great Vibes';
+            font-size: 1.45rem;
+            text-align: right;
+            margin-top: 30px;
+            opacity: 0;
+            padding-bottom: 20px;
+        }
+
+        .fade-in-text { animation: slowFade 3.5s forwards ease-out; }
+        @keyframes slowFade { to { opacity: 1; transform: translateY(0); } }
+
+        #stage-final {
+            display: none;
+            opacity: 0;
+            z-index: 100;
+            text-align: center;
+            color: white;
+            font-family: 'Great Vibes', cursive;
+            font-size: 3rem;
+            text-shadow: 0 0 25px var(--crimson);
+            transition: opacity 2.5s ease;
+            padding: 20px;
+        }
+
+        .butterfly { position: absolute; width: 45px; height: 45px; z-index: 60; pointer-events: none; transition: opacity 1s; }
+        .wing-top, .wing-bottom { animation: flap 0.25s infinite alternate ease-in-out; transform-origin: 50% 50%; }
+        @keyframes flap { from { transform: rotateY(0deg); } to { transform: rotateY(80deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="stage-heart">
+        <div class="heart-wrapper pulse" onclick="openHeart()">
+            <div class="heart-main"></div>
+            <div class="content-overlay" id="overlay">
+                <p style="color:#ffcccc; letter-spacing: 2px; font-family: sans-serif; font-size: 10px; margin-bottom: 10px;">Secret Code</p>
+                <input type="password" id="passInput" placeholder="••/•• ••••" onclick="event.stopPropagation()">
+            </div>
+        </div>
+    </div>
+
+    <div id="stage-letter" onclick="showFinalPage()">
+        <div class="paper">
+            <div class="corner-heart">❤️</div>
+            <div class="border-frame">
+                <h2 id="letter-title" style="font-family: 'Dancing Script'; font-size: 2.2rem; color: #4a0404; opacity: 0; margin: 5px 0 15px 0; text-align: center;">My Kaluuuu🫶🏻,</h2>
+                <div class="scroll-content">
+                    <div class="letter-content" id="letter-body">
+                        Starting the conversation without knowing we will fall for eachother this harder and deeper was truly a blessing. <br><br>
+                        One who stepped in and made the whole life feel a little more beautiful, <br>One with a pretty soul who promised to be with me my whole life, <br>One who always makes me smile , <br>All I want to ask from you is just be with me for each life. <br>
+                        Thank you for being the real and showing the way of loving that I could ever ask.<br>
+                        Silly, No matter how long it will take, I will wait patiently and happily wait for you. <br> Well its not only me who is waiting, its you as well.<br>
+                        All that matters is we love us, we want us, we need us and we are us.
+                        <p id="signature">Forever only yours,<br> Sannuuu</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="stage-final">
+        We are we.<br> We Love us. <br> We need us. <br>We are forever for us. <br>Happy Valentine To Us❤️.
+    </div>
+
+    <script>
+        let roseInterval;
+        let butterflyInterval;
+
+        setInterval(() => createFallingItem('❤️'), 450);
+
+        function createFallingItem(symbol, isRose = false) {
+            const item = document.createElement('div');
+            item.classList.add('falling-item');
+            if(isRose) item.classList.add('rose-item'); 
+            item.innerHTML = symbol;
+            item.style.left = Math.random() * 100 + "vw";
+            item.style.fontSize = (Math.random() * 20 + 15) + "px";
+            item.style.animationDuration = (Math.random() * 3 + 3) + "s";
+            document.body.appendChild(item);
+            setTimeout(() => item.remove(), 6000);
+        }
+
+        function createButterfly() {
+            const container = document.createElement('div');
+            container.className = 'butterfly';
+            const colors = ['#ff4d6d', '#ff85a1', '#89cff0', '#f9d71c', '#b19cd9'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            container.innerHTML = `<svg viewBox="0 0 100 100"><path class="wing-top" fill="${color}" d="M50 50 C75 10 100 35 50 50 Z" /><path class="wing-top" fill="${color}" d="M50 50 C25 10 0 35 50 50 Z" /><path class="wing-bottom" fill="${color}" d="M50 52 C70 85 90 70 50 52 Z" /><path class="wing-bottom" fill="${color}" d="M50 52 C30 85 10 70 50 52 Z" /></svg>`;
+            container.style.left = (Math.random() * window.innerWidth) + "px";
+            container.style.top = (window.innerHeight + 50) + "px";
+            document.body.appendChild(container);
+
+            let posY = window.innerHeight + 50;
+            let posX = parseFloat(container.style.left);
+            let angle = Math.random() * 100;
+
+            function fly() {
+                if(document.getElementById('stage-letter').style.display === 'none') {
+                    container.remove(); return;
+                }
+                posY -= 2.2;
+                angle += 0.05;
+                posX += Math.sin(angle) * 2.5;
+                container.style.top = posY + "px";
+                container.style.left = posX + "px";
+                
+                // Fade out before they hit the top
+                if (posY < 100) container.style.opacity = '0';
+
+                if (posY > -100) requestAnimationFrame(fly);
+                else container.remove();
+            }
+            fly();
+        }
+
+        function openHeart() {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('passInput').focus();
+        }
+
+        document.getElementById('passInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                if (this.value.trim().toLowerCase() === "18/19 july") {
+                    document.getElementById('stage-heart').style.display = 'none';
+                    startLetterPage();
+                }
+            }
+        });
+
+        function startLetterPage() {
+            const letter = document.getElementById('stage-letter');
+            letter.style.display = 'block';
+            setTimeout(() => { letter.style.opacity = '1'; }, 50);
+            roseInterval = setInterval(() => createFallingItem('🌹', true), 600);
+            setTimeout(() => { document.getElementById('letter-title').classList.add('fade-in-text');
+                setTimeout(() => { document.getElementById('letter-body').classList.add('fade-in-text');
+                    setTimeout(() => { document.getElementById('signature').classList.add('fade-in-text');
+                        butterflyInterval = setInterval(createButterfly, 1000);
+                    }, 2500);
+                }, 1200);
+            }, 800);
+        }
+
+        function showFinalPage() {
+            clearInterval(roseInterval);
+            clearInterval(butterflyInterval);
+            const letterPage = document.getElementById('stage-letter');
+            letterPage.style.display = 'none'; 
+            document.querySelectorAll('.butterfly, .rose-item').forEach(el => el.remove());
+            const finalPage = document.getElementById('stage-final');
+            finalPage.style.display = 'block';
+            setTimeout(() => { finalPage.style.opacity = '1'; }, 100);
+        }
+    </script>
+</body>
+</html>
